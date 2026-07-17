@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEK Voice AI - తెలుగు వాయిస్ మిత్ర</title>
+
+<style>
+body { margin: 0; font-family: sans-serif; background: linear-gradient(135deg, #001f3f, #ff69b4); color: white; text-align: center; }
+.container { padding: 40px 20px; }
+.logo { font-size: 40px; font-weight: bold; }
+h1 { font-size: 32px; }
+p { font-size: 20px; }
+.box { background: white; color: #222; border-radius: 20px; padding: 25px; margin: 30px auto; max-width: 400px; }
+
+button { width: 90%; padding: 15px; margin: 10px; border: none; border-radius: 30px; font-size: 18px; cursor: pointer; background: #007bff; color: white; transition: 0.3s; }
+button:hover { opacity: 0.8; }
+
+.btn-green { background: #28a745 !important; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+/* బటన్స్ పక్కపక్కన రావడానికి */
+.button-row { display: flex; justify-content: space-between; width: 90%; margin: 10px auto; }
+.action-btn { width: 48% !important; font-size: 16px !important; padding: 12px 5px !important; margin: 0 !important; border-radius: 15px !important; }
+.copy-btn { background: #ff9800; }
+.clear-btn { background: #dc3545; } /* ఎరుపు రంగు క్లియర్ బటన్ */
+
+textarea { width: 100%; min-height: 150px; margin-top: 15px; padding: 10px; border: 2px solid #007bff; border-radius: 10px; background: #fff; font-size: 18px; color: #333; box-sizing: border-box; }
+
+.footer { margin-top: 40px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo">D.E.K</div>
+    <h1>🎤 DEK Voice AI</h1>
+    <p>మాట్లాడు... పని చేయించు</p>
+
+    <div class="box">
+        <button id="startSpeech">🎙️ మాట్లాడితే రాయించు</button>
+        
+        <textarea id="outputBox" placeholder="ఇక్కడ టెక్స్ట్ వస్తుంది లేదా మీరు చేతితో టైప్ చేయవచ్చు..."></textarea>
+        
+        <!-- కాపీ మరియు క్లియర్ బటన్లు పక్కపక్కన పెట్టాము -->
+        <div class="button-row">
+            <button id="copyBtn" class="action-btn copy-btn">📋 కాపీ చేయి</button>
+            <button id="clearBtn" class="action-btn clear-btn">🗑️ క్లియర్ చేయి</button>
+        </div>
+
+        <button disabled style="background:#ccc;">🔊 రాతను వినిపించు (త్వరలో)</button>
+        <button disabled style="background:#ccc;">🤖 తెలుగు AI సహాయం (త్వరలో)</button>
+    </div>
+
+    <p>తెలుగు ప్రజల కోసం సులభమైన వాయిస్ సహాయకుడు</p>
+    <div class="footer">© 2026 DEK Voice AI</div>
+</div>
+
+<script>
+    const startBtn = document.getElementById('startSpeech');
+    const outputBox = document.getElementById('outputBox');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    let isListening = false;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'te-IN';
+        recognition.continuous = true; 
+        recognition.interimResults = false;
+
+        startBtn.addEventListener('click', () => {
+            if(!isListening) {
+                recognition.start();
+                isListening = true;
+                startBtn.innerHTML = "🔴 ఆపడానికి ఇక్కడ నొక్కండి";
+                startBtn.classList.add("btn-green");
+            } else {
+                recognition.stop();
+                isListening = false;
+                startBtn.innerHTML = "🎙️ మాట్లాడితే రాయించు";
+                startBtn.classList.remove("btn-green");
+            }
+        });
+
+        recognition.onresult = (event) => {
+            let final_transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    final_transcript += event.results[i][0].transcript + ' ';
+                }
+            }
+            outputBox.value += final_transcript;
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            startBtn.innerHTML = "🎙️ మాట్లాడితే రాయించు";
+            startBtn.classList.remove("btn-green");
+        };
+    }
+
+    // కాపీ బటన్ ఫంక్షన్
+    copyBtn.addEventListener('click', () => {
+        if(outputBox.value.trim() !== "") {
+            outputBox.select();
+            outputBox.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(outputBox.value).then(() => {
+                alert("టెక్స్ట్ కాపీ అయింది!");
+            }).catch(() => {
+                document.execCommand('copy');
+                alert("టెక్స్ట్ కాపీ అయింది!");
+            });
+        } else {
+            alert("కాపీ చేయడానికి టెక్స్ట్ ఏమీ లేదు!");
+        }
+    });
+
+    // క్లియర్ బటన్ ఫంక్షన్ (టెక్స్ట్ తుడిచేయడానికి)
+    clearBtn.addEventListener('click', () => {
+        if(outputBox.value.trim() !== "") {
+            if(confirm("టెక్స్ట్ మొత్తాన్ని తుడిచేయాలా?")) {
+                outputBox.value = "";
+            }
+        } else {
+            outputBox.value = "";
+        }
+    });
+</script>
+
+</body>
+</html>
